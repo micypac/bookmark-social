@@ -2,8 +2,10 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
-from .forms import LoginForm, UserRegistrationForm
+from .models import Profile
+from .forms import LoginForm, UserRegistrationForm, UserEditForm, ProfileEditForm
 
 
 def user_login(req):
@@ -49,8 +51,37 @@ def register(req):
             # save the user object
             new_user.save()
 
+            # create the user profile
+            Profile.objects.create(user=new_user)
+
             return render(req, "account/register_done.html", {"new_user": new_user})
     else:
         user_form = UserRegistrationForm()
 
     return render(req, "account/register.html", {"user_form": user_form})
+
+
+@login_required
+def edit(req):
+    if req.method == "POST":
+        user_form = UserEditForm(instance=req.user, data=req.POST)
+        prof_form = ProfileEditForm(
+            instance=req.user.profile, data=req.POST, files=req.FILES
+        )
+
+        if user_form.is_valid() and prof_form.is_valid():
+            user_form.save()
+            prof_form.save()
+            messages.success(req, "Profile updated successfully")
+        else:
+            messages.error(req, "Error updating your profile")
+
+    else:  # this is GET
+        user_form = UserEditForm(instance=req.user)
+        prof_form = ProfileEditForm(instance=req.user.profile)
+
+    return render(
+        req,
+        "account/edit.html",
+        {"user_form": user_form, "prof_form": prof_form},
+    )
