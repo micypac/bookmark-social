@@ -169,3 +169,7 @@ docker-compose-prod.yml
 
 # dumped data file
 mysite_data.json
+
+# certificates
+cert.crt
+cert.key
