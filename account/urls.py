@@ -41,4 +41,8 @@ urlpatterns = [
     path("", include("django.contrib.auth.urls")),
     path("register/", views.register, name="register"),
     path("edit/", views.edit, name="edit"),
+    path("users/", views.user_list, name="user_list"),
+    # path order here is important, if 'follow' is below <username>, it will be treated as user_detail because of top-down execution
+    path("users/follow/", views.user_follow, name="user_follow"),
+    path("users/<username>/", views.user_detail, name="user_detail"),
 ]

@@ -242,8 +242,8 @@ ul.messages li a.close {
   overflow: auto;
 }
 .count {
-  color: #aaa;
-  border: 3px solid #bbb;
+  color: #272829;
+  border: 3px solid #272829;
   border-radius: 26px;
   padding: 10px 20px;
   margin: 20px 10px 0;
