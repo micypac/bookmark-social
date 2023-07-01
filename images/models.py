@@ -21,9 +21,14 @@ class Image(models.Model):
         related_name="images_liked",
         blank=True,
     )
+    # this field is being updated by signals
+    total_likes = models.PositiveIntegerField(default=0)
 
     class Meta:
-        indexes = [models.Index(fields=["-created"])]
+        indexes = [
+            models.Index(fields=["-created"]),
+            models.Index(fields=["-total_likes"]),
+        ]
         ordering = ["-created"]
 
     def __str__(self) -> str:
