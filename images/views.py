@@ -7,6 +7,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from .forms import ImageCreateFrom
 from .models import Image
+from actions.utils import create_action
 
 
 @login_required
@@ -19,6 +20,7 @@ def image_create(req):
 
             new_image.user = req.user
             new_image.save()
+            create_action(req.user, "bookmarked image", new_image)
             messages.success(req, "Image added successfully")
 
             return redirect(new_image.get_absolute_url())
@@ -49,6 +51,7 @@ def image_like(req):
             image = Image.objects.get(id=image_id)
             if action == "like":
                 image.users_like.add(req.user)
+                create_action(req.user, "likes", image)
             else:
                 image.users_like.remove(req.user)
 

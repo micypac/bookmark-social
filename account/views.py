@@ -8,6 +8,8 @@ from django.contrib import messages
 
 from .models import Profile, Contact
 from .forms import LoginForm, UserRegistrationForm, UserEditForm, ProfileEditForm
+from actions.models import Action
+from actions.utils import create_action
 
 
 def user_login(req):
@@ -38,7 +40,25 @@ def user_login(req):
 
 @login_required
 def dashboard(req):
-    return render(req, "account/dashboard.html", {"section": "dashboard"})
+    actions = Action.objects.exclude(user=req.user)
+    following_ids = req.user.following.values_list("id", flat=True)
+
+    if following_ids:
+        # id user is following other users, retrieve only their actions
+        actions = actions.filter(user_id__in=following_ids)
+
+    actions = actions.select_related("user", "user__profile").prefetch_related(
+        "target"
+    )[:10]
+
+    return render(
+        req,
+        "account/dashboard.html",
+        {
+            "section": "dashboard",
+            "actions": actions,
+        },
+    )
 
 
 def register(req):
@@ -55,6 +75,9 @@ def register(req):
 
             # create the user profile
             Profile.objects.create(user=new_user)
+
+            # create actions object
+            create_action(new_user, "has created an account")
 
             return render(req, "account/register_done.html", {"new_user": new_user})
     else:
@@ -124,11 +147,15 @@ def user_follow(req):
     if user_id and action:
         try:
             user = User.objects.get(id=user_id)
+
             if action == "follow":
                 Contact.objects.get_or_create(
                     user_from=req.user,
                     user_to=user,
                 )
+
+                # create actions object
+                create_action(req.user, "is following", user)
             else:
                 Contact.objects.filter(user_from=req.user, user_to=user).delete()
 
